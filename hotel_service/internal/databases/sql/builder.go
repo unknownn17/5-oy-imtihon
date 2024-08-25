@@ -1,6 +1,7 @@
 package sqlbuilder
 
 import (
+	"fmt"
 	"hotel/internal/models"
 	"log"
 
@@ -46,14 +47,29 @@ func GetsHotel(req *models.GetsRequest) (string, []interface{}, error) {
 }
 
 func UpdateHotel(req *models.UpdateHotelRequest) (string, []interface{}, error) {
+	setMap := make(map[string]interface{})
+
+	if req.Name != "" {
+		setMap["name"] = req.Name
+	}
+	if req.Location != "" {
+		setMap["location"] = req.Location
+	}
+	if req.Rating != 0 {
+		setMap["rating"] = req.Rating
+	}
+	if req.Address != "" {
+		setMap["address"] = req.Address
+	}
+
+	if len(setMap) == 0 {
+		return "", nil, fmt.Errorf("no fields to update")
+	}
 	query, args, err := squirrel.Update("hotels").
-		SetMap(map[string]interface{}{
-			"name":     req.Name,
-			"location": req.Location,
-			"rating":   req.Rating,
-			"address":  req.Address,
-		}).
+		SetMap(setMap).
 		Where(squirrel.Eq{"id": req.ID}).
+		PlaceholderFormat(squirrel.Dollar).
+		Suffix("RETURNING id").
 		ToSql()
 	if err != nil {
 		log.Println(err)
@@ -65,6 +81,7 @@ func UpdateHotel(req *models.UpdateHotelRequest) (string, []interface{}, error) 
 func DeleteHotel(req *models.GetHotelRequest) (string, []interface{}, error) {
 	query, args, err := squirrel.Delete("hotels").
 		Where(squirrel.Eq{"id": req.ID}).
+		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
 		log.Println(err)
@@ -100,9 +117,11 @@ func GetRoom(req *models.GetRoomRequest) (string, []interface{}, error) {
 	return query, args, nil
 }
 
-func GetsRoom(req *models.GetsRequest) (string, []interface{}, error) {
+func GetsRoom(req *models.GetRoomRequest) (string, []interface{}, error) {
 	query, args, err := squirrel.Select("*").
 		From("rooms").
+		Where(squirrel.Eq{"available": true, "hotel_id": req.HotelID}).
+		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
 		log.Println(err)
@@ -111,13 +130,29 @@ func GetsRoom(req *models.GetsRequest) (string, []interface{}, error) {
 	return query, args, nil
 }
 func UpdateRoom(req *models.UpdateRoomRequest) (string, []interface{}, error) {
+	setMap := make(map[string]interface{})
+
+	if req.Available{
+		setMap["available"] = req.Available
+	}else if !req.Available{
+		setMap["available"] = req.Available
+	}
+	if req.RoomType != "" {
+		setMap["room_type"] = req.RoomType
+	}
+	if req.PricePerNight != 0 {
+		setMap["price_per_night"] = req.PricePerNight
+	}
+
+	if len(setMap) == 0 {
+		return "", nil, fmt.Errorf("no fields to update")
+	}
+
 	query, args, err := squirrel.Update("rooms").
-		SetMap(map[string]interface{}{
-			"available":     req.Available,
-			"room_type": req.RoomType,
-			"price_per_night":   req.PricePerNight,
-		}).
-		Where(squirrel.Eq{"id": req.ID,"hotel_id":req.HotelID}).
+		SetMap(setMap).
+		Where(squirrel.Eq{"id": req.ID, "hotel_id": req.HotelID}).
+		PlaceholderFormat(squirrel.Dollar).
+		Suffix("RETURNING id").
 		ToSql()
 	if err != nil {
 		log.Println(err)
@@ -128,7 +163,21 @@ func UpdateRoom(req *models.UpdateRoomRequest) (string, []interface{}, error) {
 
 func DeleteRoom(req *models.GetRoomRequest) (string, []interface{}, error) {
 	query, args, err := squirrel.Delete("rooms").
-		Where(squirrel.Eq{"id": req.ID,"hotel_id":req.HotelID}).
+		Where(squirrel.Eq{"id": req.ID, "hotel_id": req.HotelID}).
+		PlaceholderFormat(squirrel.Dollar).
+		ToSql()
+	if err != nil {
+		log.Println(err)
+		return "", nil, err
+	}
+	return query, args, nil
+}
+
+func GetRoomForHotel(req int) (string, []interface{}, error) {
+	query, args, err := squirrel.Select("*").
+		From("rooms").
+		Where(squirrel.Eq{"hotel_id": req}).
+		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
 		log.Println(err)

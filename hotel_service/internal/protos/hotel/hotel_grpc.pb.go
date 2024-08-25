@@ -42,7 +42,7 @@ type HotelClient interface {
 	Delte(ctx context.Context, in *GetHotelRequest, opts ...grpc.CallOption) (*GeneralResponse, error)
 	CreateRoom(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*GeneralResponse, error)
 	Get(ctx context.Context, in *GetroomRequest, opts ...grpc.CallOption) (*UpdateRoomRequest, error)
-	GetRooms(ctx context.Context, in *GetsRequest, opts ...grpc.CallOption) (*GetroomResponse, error)
+	GetRooms(ctx context.Context, in *GetroomRequest, opts ...grpc.CallOption) (*GetroomResponse, error)
 	UpdateRoom(ctx context.Context, in *UpdateRoomRequest, opts ...grpc.CallOption) (*GeneralResponse, error)
 	DeleteRoom(ctx context.Context, in *GetroomRequest, opts ...grpc.CallOption) (*GeneralResponse, error)
 }
@@ -125,7 +125,7 @@ func (c *hotelClient) Get(ctx context.Context, in *GetroomRequest, opts ...grpc.
 	return out, nil
 }
 
-func (c *hotelClient) GetRooms(ctx context.Context, in *GetsRequest, opts ...grpc.CallOption) (*GetroomResponse, error) {
+func (c *hotelClient) GetRooms(ctx context.Context, in *GetroomRequest, opts ...grpc.CallOption) (*GetroomResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetroomResponse)
 	err := c.cc.Invoke(ctx, Hotel_GetRooms_FullMethodName, in, out, cOpts...)
@@ -166,7 +166,7 @@ type HotelServer interface {
 	Delte(context.Context, *GetHotelRequest) (*GeneralResponse, error)
 	CreateRoom(context.Context, *CreateRoomRequest) (*GeneralResponse, error)
 	Get(context.Context, *GetroomRequest) (*UpdateRoomRequest, error)
-	GetRooms(context.Context, *GetsRequest) (*GetroomResponse, error)
+	GetRooms(context.Context, *GetroomRequest) (*GetroomResponse, error)
 	UpdateRoom(context.Context, *UpdateRoomRequest) (*GeneralResponse, error)
 	DeleteRoom(context.Context, *GetroomRequest) (*GeneralResponse, error)
 	mustEmbedUnimplementedHotelServer()
@@ -200,7 +200,7 @@ func (UnimplementedHotelServer) CreateRoom(context.Context, *CreateRoomRequest) 
 func (UnimplementedHotelServer) Get(context.Context, *GetroomRequest) (*UpdateRoomRequest, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedHotelServer) GetRooms(context.Context, *GetsRequest) (*GetroomResponse, error) {
+func (UnimplementedHotelServer) GetRooms(context.Context, *GetroomRequest) (*GetroomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRooms not implemented")
 }
 func (UnimplementedHotelServer) UpdateRoom(context.Context, *UpdateRoomRequest) (*GeneralResponse, error) {
@@ -357,7 +357,7 @@ func _Hotel_Get_Handler(srv interface{}, ctx context.Context, dec func(interface
 }
 
 func _Hotel_GetRooms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetsRequest)
+	in := new(GetroomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -369,7 +369,7 @@ func _Hotel_GetRooms_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: Hotel_GetRooms_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HotelServer).GetRooms(ctx, req.(*GetsRequest))
+		return srv.(HotelServer).GetRooms(ctx, req.(*GetroomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

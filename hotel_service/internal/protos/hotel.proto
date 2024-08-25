@@ -36,7 +36,7 @@ message GetHotelResponse{
     string location=3;
     int32 rating=4;
     string address=5;
-    repeated GetHotelResponse rooms=6;
+    repeated UpdateRoomRequest rooms=6;
 }
 
 
@@ -50,10 +50,11 @@ message CreateRoomRequest{
 message GetroomRequest{
     int32 hotel_id=1;
     int32 id=2;
+    bool available=3;
 }
 
 message GetroomResponse{
-repeated UpdateHotelRequest rooms=1;
+repeated UpdateRoomRequest rooms=1;
 }
 
 message UpdateRoomRequest{
@@ -72,7 +73,7 @@ service Hotel{
     rpc Delte(GetHotelRequest)returns(GeneralResponse);
     rpc CreateRoom(CreateRoomRequest)returns(GeneralResponse);
     rpc Get(GetroomRequest)returns(UpdateRoomRequest);
-    rpc GetRooms(GetsRequest)returns(GetroomResponse);
+    rpc GetRooms(GetroomRequest)returns(GetroomResponse);
     rpc UpdateRoom(UpdateRoomRequest)returns(GeneralResponse);
     rpc DeleteRoom(GetroomRequest)returns(GeneralResponse);
 }

@@ -7,9 +7,9 @@ CREATE TABLE IF NOT EXISTS hotels(
 );
 
 CREATE TABLE IF NOT EXISTS rooms (
-    id SERIAL PRIMARY KEY,
     hotel_id INT,
+    id SERIAL PRIMARY KEY,
     room_type VARCHAR(100),
     price_per_night FLOAT,
-    availability BOOLEAN DEFAULT TRUE
+    available BOOLEAN DEFAULT TRUE
 );

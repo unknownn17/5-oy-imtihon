@@ -27,12 +27,12 @@ type GetHotelRequest struct {
 }
 
 type GetHotelResponse struct {
-	ID       int32              `json:"id"`
-	Name     string             `json:"name"`
-	Location string             `json:"location"`
-	Rating   int32              `json:"rating"`
-	Address  string             `json:"address"`
-	Rooms    []GetHotelResponse `json:"rooms"`
+	ID       int32                `json:"id"`
+	Name     string               `json:"name"`
+	Location string               `json:"location"`
+	Rating   int32                `json:"rating"`
+	Address  string               `json:"address"`
+	Rooms    []*UpdateRoomRequest `json:"rooms"`
 }
 
 type CreateRoomRequest struct {
@@ -42,14 +42,13 @@ type CreateRoomRequest struct {
 }
 
 type GetRoomRequest struct {
-	HotelID int32 `json:"hotel_id"`
-	ID      int32 `json:"id"`
+	HotelID   int32 `json:"hotel_id"`
+	ID        int32 `json:"id"`
+	Available bool  `json:"available"`
 }
 
 type GetRoomResponse struct {
-	Available     bool    `json:"available"`
-	RoomType      string  `json:"room_type"`
-	PricePerNight float32 `json:"price_per_night"`
+	Rooms []*UpdateRoomRequest `json:"rooms"`
 }
 
 type UpdateRoomRequest struct {
