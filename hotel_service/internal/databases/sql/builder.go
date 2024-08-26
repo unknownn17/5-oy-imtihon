@@ -120,7 +120,7 @@ func GetRoom(req *models.GetRoomRequest) (string, []interface{}, error) {
 func GetsRoom(req *models.GetRoomRequest) (string, []interface{}, error) {
 	query, args, err := squirrel.Select("*").
 		From("rooms").
-		Where(squirrel.Eq{"available": true, "hotel_id": req.HotelID}).
+		Where(squirrel.Eq{"aDeleteWaitingListvailable": true, "hotel_id": req.HotelID}).
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
