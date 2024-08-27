@@ -6,16 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	sqlbuilder "user/internal/database/sql"
 	"user/internal/models"
+	notificationss "user/internal/protos/notification"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Database struct {
 	Db *sql.DB
+	N  notificationss.NotificationClient
 }
-
 
 func (u *Database) LogIn(ctx context.Context, req *models.LogInRequest) (*models.LogInResponse, error) {
 	query, args, err := sqlbuilder.LogIn(req)
@@ -30,7 +32,15 @@ func (u *Database) LogIn(ctx context.Context, req *models.LogInRequest) (*models
 	}
 	fmt.Println(password)
 	fmt.Println(req.Password)
-	return &models.LogInResponse{Status: u.ComparePassword(password, req.Password)}, nil
+	check := u.ComparePassword(password, req.Password)
+	if check {
+		_, err := u.N.Email(ctx, &notificationss.EmailSend{Email: req.Email, Message: "Welcome back! You have logged in"})
+		if err != nil {
+			log.Println("is error there",err)
+		}
+		return &models.LogInResponse{Status: true}, nil
+	}
+	return nil, errors.New("password isn't match")
 }
 
 func (u *Database) CreateUser(ctx context.Context, req *models.RegisterUserRequest) (*models.GeneralResponse, error) {
@@ -46,7 +56,15 @@ func (u *Database) CreateUser(ctx context.Context, req *models.RegisterUserReque
 		log.Println(err)
 		return nil, err
 	}
-	return &models.GeneralResponse{Message: fmt.Sprintf("user created with this id %v", id)}, nil
+	_, err = u.N.AddUser(ctx, &notificationss.AddnewUser{UserId: strconv.Itoa(id)})
+	if err != nil {
+		log.Println(err)
+	}
+	_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: int32(id), Message: fmt.Sprintf("your account is created successfully with this is %v you can get notifications with it", id)})
+	if err != nil {
+		log.Println(err)
+	}
+	return &models.GeneralResponse{Message: fmt.Sprintf("you account is created successfully with this is %v you can get notifications with it", id)}, nil
 }
 
 func (u *Database) GetUser(ctx context.Context, req *models.GetUserRequest) (*models.GetUserResponse, error) {
@@ -90,7 +108,11 @@ func (u *Database) UpdateUser(ctx context.Context, req *models.UpdateUserRequest
 		log.Println(err)
 		return nil, err
 	}
-	return &models.GeneralResponse{Message: fmt.Sprintf("user updated with this id %v", id)}, nil
+	_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: int32(id), Message: fmt.Sprintf("you account is updated successfully with this is %v", id)})
+	if err != nil {
+		log.Println(err)
+	}
+	return &models.GeneralResponse{Message: fmt.Sprintf("your account is updating with this id %v", id)}, nil
 }
 
 func (u *Database) LogOut(ctx context.Context, req *models.GetUserRequest) (*models.GeneralResponse, error) {
@@ -104,7 +126,11 @@ func (u *Database) LogOut(ctx context.Context, req *models.GetUserRequest) (*mod
 		log.Println(err)
 		return nil, err
 	}
-	return &models.GeneralResponse{Message: "Succesfully Logged Out"}, nil
+	_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: int32(req.ID), Message: "you have successfully logged out from your account, you can log back in!"})
+	if err != nil {
+		log.Println(err)
+	}
+	return &models.GeneralResponse{Message: "Logging Out..."}, nil
 }
 
 func (u *Database) DeletUser(ctx context.Context, req *models.GetUserRequest) (*models.GeneralResponse, error) {
@@ -118,9 +144,12 @@ func (u *Database) DeletUser(ctx context.Context, req *models.GetUserRequest) (*
 		log.Println(err)
 		return nil, err
 	}
-	return &models.GeneralResponse{Message: "Succesfully Deleted"}, nil
+	_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: int32(req.ID), Message: "you have successfully deleted your account"})
+	if err != nil {
+		log.Println(err)
+	}
+	return &models.GeneralResponse{Message: "Deleting..."}, nil
 }
-
 
 func (u *Database) ComparePassword(hashed, password string) bool {
 	if err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password)); err != nil {
@@ -137,4 +166,3 @@ func (u *Database) Hashing(password string) string {
 	}
 	return string(hashed)
 }
-

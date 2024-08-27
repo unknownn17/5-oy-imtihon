@@ -1,0 +1,261 @@
+definitions:
+  models.GetUserResponse:
+    properties:
+      age:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      logout:
+        type: boolean
+      username:
+        type: string
+    type: object
+  models.LogInRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  models.RegisterUserRequest:
+    properties:
+      age:
+        type: integer
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UpdateUserRequest:
+    properties:
+      age:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.VerifyRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is an API for booking Hotels.
+  title: ITEMS API
+  version: "2.0"
+paths:
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by providing their user ID.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Your account is deleting
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - user
+    get:
+      consumes:
+      - application/json
+      description: Retrieve user information by providing the user ID.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User information
+          schema:
+            $ref: '#/definitions/models.GetUserResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get user information
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Update user information by providing the user ID in the path and
+        the fields to update in the request body.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User update data
+        in: body
+        name: updateUserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Your account is updating we'll notify you when it's updated
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update user information
+      tags:
+      - user
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in a user by providing their email and password.
+      parameters:
+      - description: User login data
+        in: body
+        name: logInRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.LogInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Log in a user
+      tags:
+      - user
+  /users/logout/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Log out a user by providing their user ID.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: You have logged out!
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Log out a user
+      tags:
+      - user
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user by providing email and password. A verification
+        code will be sent to the provided email.
+      parameters:
+      - description: User registration data
+        in: body
+        name: registerUserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Verification code is sent to your email
+          schema:
+            type: string
+        "403":
+          description: Already Exists
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Register a new user
+      tags:
+      - user
+  /users/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify a user account by providing the verification code sent to
+        the user's email.
+      parameters:
+      - description: Verification code data
+        in: body
+        name: verifyRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.VerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: You have verified your account and now you can log in
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Verify a user account
+      tags:
+      - user
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -22,6 +22,7 @@ func (u *Adjust) LogIn(ctx context.Context, req *user.LogInRequest) (*user.LogIn
 		log.Println(err)
 		return nil, err
 	}
+	
 	return &user.LogInResposne{Status: res.Status}, nil
 }
 

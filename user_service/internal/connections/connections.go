@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	notification17 "user/internal/client/notification"
 	"user/internal/config"
 	"user/internal/database/adjust"
 	interface17 "user/internal/interface"
@@ -25,7 +26,8 @@ func NewDatabase() interface17.User {
 	if err := db.Ping(); err != nil {
 		log.Println(err)
 	}
-	return &adjust.Database{Db: db}
+	n := notification17.Hotel()
+	return &adjust.Database{Db: db, N: n}
 }
 
 func NewService() *service.Service {
