@@ -112,8 +112,8 @@ func (u *Consumer17) Update(req []byte) error {
 		Id:           req1.ID,
 		RoomId:       req1.RoomID,
 		RoomType:     req1.RoomType,
-		CheckInDate:  timestamppb.New(req1.CheckInDate),
-		CheckOutDate: timestamppb.New(req1.CheckOutDate),
+		CheckInDate:  req1.CheckInDate,
+		CheckOutDate: req1.CheckOutDate,
 	}
 	_, err := u.A.Update(u.Ctx, &newreq)
 	if err != nil {

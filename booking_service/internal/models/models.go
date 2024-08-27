@@ -3,6 +3,8 @@ package models
 import (
 	"errors"
 	"time"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type BookHotelRequest struct {
@@ -38,8 +40,8 @@ type BookHotelUpdateRequest struct {
 	ID           int32     `json:"id"`
 	RoomID       int32     `json:"room_id"`
 	RoomType     string    `json:"roomType"`
-	CheckInDate  time.Time `json:"checkInDate"`
-	CheckOutDate time.Time `json:"checkOutDate"`
+	CheckInDate  *timestamppb.Timestamp `json:"checkInDate"`
+	CheckOutDate *timestamppb.Timestamp `json:"checkOutDate"`
 }
 
 type GeneralResponse struct {

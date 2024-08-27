@@ -21,8 +21,8 @@ func (u *Database) Create(ctx context.Context, req *models.BookHotelRequest, pri
 func (u *Database) Get(ctx context.Context, req *models.GetUsersBookRequest) (*models.GetUsersBookResponse, error) {
 	return u.D.Get(ctx, req)
 }
-func (u *Database) Update(ctx context.Context, req *models.BookHotelUpdateRequest) (*models.GeneralResponse, error) {
-	return u.D.Update(ctx, req)
+func (u *Database) Update(ctx context.Context, req *models.BookHotelUpdateRequest,price float64) (*models.GeneralResponse, error) {
+	return u.D.Update(ctx, req,price)
 }
 func (u *Database) Cancel(ctx context.Context, req *models.CancelRoomRequest) (*models.GeneralResponse, error) {
 	return u.D.Cancel(ctx, req)
@@ -63,7 +63,6 @@ func (u *AdjustDatabase) GetW(ctx context.Context, req *booking.GetWaitinglistRe
 func (u *AdjustDatabase) UpdateW(ctx context.Context, req *booking.UpdateWaitingListRequest) (*booking.GeneralResponse, error) {
 	return u.A.UpdateW(ctx, req)
 }
-
 func (u *AdjustDatabase) DeleteW(ctx context.Context, req *booking.DeleteWaitingList) (*booking.GeneralResponse, error) {
 	return u.A.DeleteW(ctx, req)
 }

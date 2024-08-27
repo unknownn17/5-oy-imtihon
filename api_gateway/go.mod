@@ -3,7 +3,6 @@ module api
 go 1.22.3
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/swaggo/http-swagger v1.3.4

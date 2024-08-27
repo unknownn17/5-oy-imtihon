@@ -42,7 +42,7 @@ func (u *Database) Create(ctx context.Context, req *models.BookHotelRequest, pri
 		log.Println(err)
 		return nil, err
 	}
-
+	fmt.Println(id)
 	return &models.GeneralResponse{Message: fmt.Sprintf("%v", id)}, nil
 }
 
@@ -74,8 +74,8 @@ func (u *Database) Get(ctx context.Context, req *models.GetUsersBookRequest) (*m
 	return &res, nil
 }
 
-func (u *Database) Update(ctx context.Context, req *models.BookHotelUpdateRequest) (*models.GeneralResponse, error) {
-	query, args, err := sqlbuilder.Update(req, u.Price)
+func (u *Database) Update(ctx context.Context, req *models.BookHotelUpdateRequest,price float64) (*models.GeneralResponse, error) {
+	query, args, err := sqlbuilder.Update(req, price)
 	if err != nil {
 		log.Println(err)
 		return nil, err

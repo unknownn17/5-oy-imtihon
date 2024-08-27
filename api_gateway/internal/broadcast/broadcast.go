@@ -5,6 +5,7 @@ import (
 	jwttoken "api/internal/jwt"
 	"api/internal/kafka/producer"
 	"api/internal/models"
+	"api/internal/protos/booking"
 	"api/internal/protos/hotel"
 	"api/internal/protos/user"
 	redismethod "api/internal/redis/method"
@@ -18,7 +19,7 @@ import (
 type Adjust struct {
 	U user.UserClient
 	R *redismethod.Redis
-	// B   booking.BookHotelClient
+	B booking.BookHotelClient
 	H hotel.HotelClient
 	// N   notificationss.NotificationClient
 	Ctx context.Context
@@ -47,6 +48,7 @@ func (u *Adjust) Verify(req *models.VerifyRequest) error {
 		log.Println(err)
 		return err
 	}
+	fmt.Println(res)
 	if res != req.Code {
 		return errors.New("password or email isn't match")
 
@@ -76,21 +78,27 @@ func (u *Adjust) CreateUser(req *models.RegisterUserRequest) error {
 	return nil
 }
 
-func (u *Adjust) Login(req *models.LogInRequest) (string, error) {
+func (u *Adjust) Login(req *models.LogInRequest) (map[string]string, error) {
 	res, err := u.U.LogIn(u.Ctx, &user.LogInRequest{Email: req.Email, Password: req.Password})
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return nil, err
 	}
 	if res.Status {
 		token, err := jwttoken.CreateToken(req)
 		if err != nil {
 			log.Println(err)
-			return "", err
+			return nil, err
 		}
-		return token, err
+		res, err := u.U.LastInserted(u.Ctx, &user.LastInsertedUser{})
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		id := res.Id
+		return map[string]string{fmt.Sprintf("your account is created with this id %v", id): token}, err
 	}
-	return "password or email isn't match or missing", nil
+	return nil, errors.New("password or email isn't match or missing")
 }
 
 func (u *Adjust) GetUser(req *models.GetUserRequest) (*models.GetUserResponse, error) {
@@ -271,4 +279,111 @@ func (u *Adjust) DeleteRoom(req *models.GetRoomRequest) error {
 		return err
 	}
 	return nil
+}
+
+// booking
+
+func (u *Adjust) CreateBooking(req *models.BookHotelRequest) (*models.GeneralResponse, error) {
+	byted, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	res, err := u.B.Create(u.Ctx, &booking.Bytes{All: byted})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &models.GeneralResponse{Message: res.Message}, nil
+}
+
+
+
+
+func (u *Adjust) GetBooking(req *models.GetUsersBookRequest) (*models.GetUsersBookResponse, error) {
+	res, err := u.B.Get(u.Ctx, &booking.GetUsersBookRequest{Id: req.ID})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &models.GetUsersBookResponse{ID: res.Id, UserID: res.UserID, HotelID: res.HotelID, RoomID: res.RoomId, RoomType: res.RoomType, CheckInDate: res.CheckInDate.AsTime(), CheckOutDate: res.CheckOutDate.AsTime(), TotalAmount: res.TotalAmount, Status: res.Status}, nil
+}
+
+func (u *Adjust) UpdateBooking(req *models.BookHotelUpdateRequest) (*models.GeneralResponse, error) {
+	byted, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	res, err := u.B.Update(u.Ctx, &booking.Bytes{All: byted})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &models.GeneralResponse{Message: res.Message}, nil
+}
+
+func (u *Adjust) DeleteBooking(req *models.CancelRoomRequest) (*models.GeneralResponse, error) {
+	byted, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	res, err := u.B.Delete(u.Ctx, &booking.Bytes{All: byted})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &models.GeneralResponse{Message: res.Message}, nil
+}
+
+func (u *Adjust) CreateWaitinglist(req *models.CreateWaitingList) (*models.GeneralResponse, error) {
+	byted, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	res, err := u.B.CreateWaiting(u.Ctx, &booking.Bytes{All: byted})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &models.GeneralResponse{Message: res.Message}, nil
+}
+
+func (u *Adjust) GetWaiting(req *models.GetWaitinglistRequest) (*models.GetWaitinglistResponse, error) {
+	res, err := u.B.GetWaitinglist(u.Ctx, &booking.GetWaitinglistRequest{Id: req.ID})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &models.GetWaitinglistResponse{UserID: res.UserId, UserEmail: res.UserEmail, RoomType: res.RoomType, HotelID: res.HotelId, CheckInDate: res.CheckInDate.AsTime(), CheckOutDate: res.CheckOutDate.AsTime(), Status: res.Status, ID: res.Id}, nil
+}
+
+func (u *Adjust) UpdateWaiting(req *models.UpdateWaitingListRequest) (*models.GeneralResponse, error) {
+	byted, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	res, err := u.B.UpdateWaiting(u.Ctx, &booking.Bytes{All: byted})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &models.GeneralResponse{Message: res.Message}, nil
+}
+
+func (u *Adjust) DeleteWaiting(req *models.DeleteWaitingList) (*models.GeneralResponse, error) {
+	byted, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	res, err := u.B.UpdateWaiting(u.Ctx, &booking.Bytes{All: byted})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &models.GeneralResponse{Message: res.Message}, nil
 }

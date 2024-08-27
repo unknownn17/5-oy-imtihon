@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS waitinglist(
     user_id INT,
     hotel_id INT,
     room_type TEXT,
-    user_email TEXT,
+    user_email VARCHAR(250) UNIQUE,
     enterydate DATE,
     leavingdate DATE,
     status TEXT

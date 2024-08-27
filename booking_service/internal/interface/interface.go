@@ -10,7 +10,7 @@ type Booking interface {
 	Create(ctx context.Context, req *models.BookHotelRequest, price float64) (*models.GeneralResponse, error)
 	Get(ctx context.Context, req *models.GetUsersBookRequest) (*models.GetUsersBookResponse, error)
 	GetRoomInfo(ctx context.Context, req *models.GetRoomInfo) (*models.GetUsersBookResponse, error)
-	Update(ctx context.Context, req *models.BookHotelUpdateRequest) (*models.GeneralResponse, error)
+	Update(ctx context.Context, req *models.BookHotelUpdateRequest, price float64) (*models.GeneralResponse, error)
 	Cancel(ctx context.Context, req *models.CancelRoomRequest) (*models.GeneralResponse, error)
 	CreateW(ctx context.Context, req *models.CreateWaitingList) (*models.GeneralResponse, error)
 	GetW(ctx context.Context, req *models.GetWaitinglistRequest) (*models.GetWaitinglistResponse, error)

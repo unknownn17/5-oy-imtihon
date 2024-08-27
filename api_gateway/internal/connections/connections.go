@@ -3,6 +3,7 @@ package connections
 import (
 	"api/internal/api/handler"
 	broadcast17 "api/internal/broadcast"
+	"api/internal/clients/booking"
 	hotelservice "api/internal/clients/hotel"
 	userservice "api/internal/clients/user"
 	redismethod "api/internal/redis/method"
@@ -15,9 +16,10 @@ import (
 func NewBroadcast() *broadcast17.Adjust {
 	u := userservice.UserClinet()
 	h:=hotelservice.Hotel()
+	b:=booking.Hotel()
 	r := Redis()
 	ctx := context.Background()
-	return &broadcast17.Adjust{U: u, Ctx: ctx, R: r,H: h}
+	return &broadcast17.Adjust{U: u, Ctx: ctx, R: r,H: h,B: b}
 }
 
 func NewHandler() *handler.Handler {

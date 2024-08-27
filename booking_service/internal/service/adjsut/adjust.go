@@ -24,16 +24,26 @@ type Adjust struct {
 
 var uuser int
 
+var hotelid int
+
 func (u *Adjust) Create(ctx context.Context, req *booking.BookHotelRequest) (*booking.GeneralResponse, error) {
 	email, err1 := u.CheckUser(ctx, req)
 	if err1 != nil {
 		return nil, err1
 	}
-	price, err := u.CheckHotel(ctx, req)
+	_, err := u.CheckHotel(ctx, req)
 	switch err {
 	case models.ErrHotelNotFound:
+		_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: req.UserID, Message: err.Error()})
+		if err != nil {
+			log.Println(err)
+		}
 		return nil, err
 	case models.ErrRoomNotFound:
+		_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: req.UserID, Message: err.Error()})
+		if err != nil {
+			log.Println(err)
+		}
 		return nil, err
 	case models.ErrRoomNotAvailable:
 		var newReq = models.CreateWaitingList{
@@ -50,8 +60,17 @@ func (u *Adjust) Create(ctx context.Context, req *booking.BookHotelRequest) (*bo
 			return nil, err
 		}
 		uuser = int(newReq.UserID)
+		_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: req.UserID, Message: res.Message})
+		if err != nil {
+			log.Println(err)
+		}
 		return &booking.GeneralResponse{Message: res.Message}, nil
 	}
+	res1, err := u.Hotel.Get(ctx, &hotel.GetroomRequest{HotelId: req.HotelID, Id: req.RoomId})
+	if err != nil {
+		log.Println(err)
+	}
+	hotelid = int(res1.HotelId)
 	var newreq = models.BookHotelRequest{
 		UserID:       req.UserID,
 		RoomID:       req.RoomId,
@@ -60,7 +79,7 @@ func (u *Adjust) Create(ctx context.Context, req *booking.BookHotelRequest) (*bo
 		CheckInDate:  req.CheckInDate.AsTime(),
 		CheckOutDate: req.CheckOutDate.AsTime(),
 	}
-	res, err := u.S.Create(ctx, &newreq, price)
+	res, err := u.S.Create(ctx, &newreq, float64(res1.PricePerNight))
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -70,11 +89,11 @@ func (u *Adjust) Create(ctx context.Context, req *booking.BookHotelRequest) (*bo
 		log.Println(err)
 		return nil, err
 	}
-	_, err = u.N.Email(ctx, &notificationss.EmailSend{Email: email, Message: fmt.Sprintf("We congratulate you with successfully booking room and your room id is %v", req.RoomId)})
+	_, err = u.N.Email(ctx, &notificationss.EmailSend{Email: email, Message: fmt.Sprintf("We congratulate you with successfully booking room and your book id is %v",res.Message)})
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: req.UserID, Message: fmt.Sprintf("We congratulate you with successfully booking room and your room id is %v", req.RoomId)})
+	_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: req.UserID, Message: fmt.Sprintf("We congratulate you with successfully booking room and your book id is %v", res.Message)})
 	if err != nil {
 		log.Println(err)
 	}
@@ -100,11 +119,15 @@ func (u *Adjust) Get(ctx context.Context, req *booking.GetUsersBookRequest) (*bo
 }
 
 func (u *Adjust) Update(ctx context.Context, req *booking.BookHotelUpdateRequest) (*booking.GeneralResponse, error) {
+	res1, err := u.Hotel.Get(ctx, &hotel.GetroomRequest{HotelId: int32(hotelid), Id: req.RoomId})
+	if err != nil {
+		log.Println(err)
+	}
 	res, err := u.S.Update(ctx, &models.BookHotelUpdateRequest{ID: req.Id,
 		RoomID:       req.RoomId,
 		RoomType:     req.RoomType,
-		CheckInDate:  req.CheckInDate.AsTime(),
-		CheckOutDate: req.CheckOutDate.AsTime()})
+		CheckInDate:  req.CheckInDate,
+		CheckOutDate: req.CheckOutDate}, float64(res1.PricePerNight))
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -117,14 +140,25 @@ func (u *Adjust) Update(ctx context.Context, req *booking.BookHotelUpdateRequest
 }
 
 func (u *Adjust) Cancel(ctx context.Context, req *booking.CancelROomRequest) (*booking.GeneralResponse, error) {
-	res, err := u.S.Cancel(ctx, &models.CancelRoomRequest{ID: req.Id})
+	info, err := u.S.Get(ctx, &models.GetUsersBookRequest{ID: req.Id})
 	if err != nil {
-		log.Println(err)
+		log.Println("info",err)
+		return nil, err
+	}
+	fmt.Println("info",info.HotelID,info.RoomID)
+	_, err = u.Hotel.UpdateRoom(ctx, &hotel.UpdateRoomRequest{Available: true, HotelId: info.HotelID, Id: info.RoomID})
+	if err != nil {
+		log.Println("error is there",err)
 		return nil, err
 	}
 	_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: int32(uuser), Message: "You cancelled room succesfully"})
 	if err != nil {
+		log.Println("in notification error",err)
+	}
+	res, err := u.S.Cancel(ctx, &models.CancelRoomRequest{ID: req.Id})
+	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	return &booking.GeneralResponse{Message: res.Message}, nil
 }
@@ -195,9 +229,17 @@ func (u *Adjust) CheckUser(ctx context.Context, req *booking.BookHotelRequest) (
 	res, err := u.User.GetUser(ctx, &user.GetUserRequest{Id: req.UserID})
 	if err != nil {
 		log.Println(err)
+		_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: req.UserID, Message: "there is no such user with this id"})
+		if err != nil {
+			log.Println(err)
+		}
 		return "", errors.New("there is no such user with this id")
 	}
 	if res.Age < int32(18) {
+		_, err = u.N.Notification(ctx, &notificationss.ProduceMessage{UserId: req.UserID, Message: "you must be older than 18 years old to get a room"})
+		if err != nil {
+			log.Println(err)
+		}
 		return "", errors.New("you must be old enough to get a room")
 	}
 	return res.Email, nil
@@ -229,9 +271,9 @@ func (u *Adjust) CheckHotel(ctx context.Context, req *booking.BookHotelRequest) 
 		return float64(availableRooms[0].PricePerNight), nil
 	}
 
-	if len(res.Rooms) == 0 {
-		return 0, models.ErrRoomNotFound
-	}
+	// if len(res.Rooms) == 0 {
+	// 	return 0, models.ErrRoomNotFound
+	// }
 
 	return 0, models.ErrRoomNotAvailable
 }
