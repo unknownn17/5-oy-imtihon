@@ -34,9 +34,9 @@ func NewRouter() {
 
 	// Users
 
-	r.HandleFunc("POST /users/register", handler.Register)
-	r.HandleFunc("POST /users/verify", handler.Verify)
-	r.HandleFunc("POST /users/login", handler.LogIn)
+	r.HandleFunc("POST /users/register", rate.Limit(handler.Register))
+	r.HandleFunc("POST /users/verify",rate.Limit( handler.Verify))
+	r.HandleFunc("POST /users/login", rate.Limit(handler.LogIn))
 	r.HandleFunc("GET /users/{id}", jwttoken.JWTMiddleware(rate.Limit(handler.GetUser)))
 	r.HandleFunc("PUT /users/{id}", jwttoken.JWTMiddleware(rate.Limit(handler.UpdateUser)))
 	r.HandleFunc("DELETE /users/{id}", jwttoken.JWTMiddleware(rate.Limit(handler.DeleteUser)))

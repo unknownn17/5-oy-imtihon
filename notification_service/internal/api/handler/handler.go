@@ -50,7 +50,6 @@ func (u *WebSocket) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	kafkaReader, err := kgo.NewClient(
 		kgo.SeedBrokers("broker:29092"),
 		kgo.ConsumeTopics("notification"),
-		kgo.ConsumerGroup("my_group"),
 	)
 	if err != nil {
 		log.Println("Kafka client creation error:", err)

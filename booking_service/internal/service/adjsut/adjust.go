@@ -70,7 +70,7 @@ func (u *Adjust) Create(ctx context.Context, req *booking.BookHotelRequest) (*bo
 	if err != nil {
 		log.Println(err)
 	}
-	hotelid = int(res1.HotelId)
+	// hotelid = int(res1.HotelId)
 	var newreq = models.BookHotelRequest{
 		UserID:       req.UserID,
 		RoomID:       req.RoomId,

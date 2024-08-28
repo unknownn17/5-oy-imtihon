@@ -2,10 +2,10 @@ package middleware
 
 import (
 	redismethod "api/internal/redis/method"
-	"context"
-	"fmt"
 	"net/http"
 	"time"
+
+	"golang.org/x/time/rate"
 )
 
 type RateLimiter struct {
@@ -14,21 +14,12 @@ type RateLimiter struct {
 	Window      time.Duration
 }
 
-func (rl *RateLimiter)Limit(next http.HandlerFunc) http.HandlerFunc {
+func (rl *RateLimiter) Limit(next http.HandlerFunc) http.HandlerFunc {
+	limiter := rate.NewLimiter(2, 4)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := r.RemoteAddr
-		ctx := context.Background()
-		key := fmt.Sprintf("rate:%s", ip)
-		count, err := rl.RedisClient.R.Incr(ctx, key).Result()
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		if count == 1 {
-			rl.RedisClient.R.Expire(ctx, key, rl.Window)
-		}
-		if int(count) > rl.RateLimit {
-			http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+		if !limiter.Allow() {
+			http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
 			return
 		}
 		next.ServeHTTP(w, r)

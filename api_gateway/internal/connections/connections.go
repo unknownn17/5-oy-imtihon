@@ -45,5 +45,5 @@ func Redis() *redismethod.Redis {
 
 func NewRateLimiting() *middleware.RateLimiter {
 	a := Redis()
-	return &middleware.RateLimiter{RedisClient: a, RateLimit: 100, Window: time.Minute * 1}
+	return &middleware.RateLimiter{RedisClient: a, RateLimit: 10, Window: time.Minute * 1}
 }
