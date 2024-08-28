@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -27,6 +28,7 @@ import (
 // @BasePath /
 
 func NewRouter() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
 	c := config.Configuration()
 	r := http.NewServeMux()
 	handler := connections.NewHandler()
@@ -35,7 +37,7 @@ func NewRouter() {
 	// Users
 
 	r.HandleFunc("POST /users/register", rate.Limit(handler.Register))
-	r.HandleFunc("POST /users/verify",rate.Limit( handler.Verify))
+	r.HandleFunc("POST /users/verify", rate.Limit(handler.Verify))
 	r.HandleFunc("POST /users/login", rate.Limit(handler.LogIn))
 	r.HandleFunc("GET /users/{id}", jwttoken.JWTMiddleware(rate.Limit(handler.GetUser)))
 	r.HandleFunc("PUT /users/{id}", jwttoken.JWTMiddleware(rate.Limit(handler.UpdateUser)))
@@ -75,15 +77,16 @@ func NewRouter() {
 		Handler:   r,
 		TLSConfig: tlsConfig,
 	}
+	go GracefulShutdown(srv,logger)
 	fmt.Printf("Server started on port %s\n", c.User.Port)
 	err := srv.ListenAndServeTLS("./tls/localhost.pem", "./tls/localhost-key.pem")
-	err.Error()
+	logger.Error(err.Error())
 	os.Exit(1)
 }
 
 func GracefulShutdown(srv *http.Server, logger *slog.Logger) {
 	shutdownCh := make(chan os.Signal, 1)
-	signal.Notify(shutdownCh, os.Interrupt, os.Kill)
+	signal.Notify(shutdownCh, os.Interrupt, syscall.SIGTERM)
 
 	<-shutdownCh
 	logger.Info("Shutdown signal received, initiating graceful shutdown...")
@@ -92,8 +95,17 @@ func GracefulShutdown(srv *http.Server, logger *slog.Logger) {
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Error("Server shutdown error: " + err.Error())
+		logger.Error("Server shutdown encountered an error: " + err.Error())
 	} else {
 		logger.Info("Server gracefully stopped")
+	}
+
+	select {
+	case <-shutdownCtx.Done():
+		if shutdownCtx.Err() == context.DeadlineExceeded {
+			logger.Warn("Shutdown deadline exceeded, forcing server to stop")
+		}
+	default:
+		logger.Info("Shutdown completed within the timeout period")
 	}
 }
