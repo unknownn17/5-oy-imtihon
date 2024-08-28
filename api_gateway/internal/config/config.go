@@ -13,7 +13,7 @@ func Configuration() *Config {
 	c := &Config{}
 
 
-	c.User.Host = osGetenv("HOST", "localhost")
+	c.User.Host = osGetenv("HOST", " api_gateway")
 	c.User.Port = osGetenv("PORT", ":8085")
 
 	return c

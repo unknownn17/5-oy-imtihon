@@ -21,11 +21,11 @@ func Configuration() *Config {
 
 	c.Database.User = osGetenv("DB_USER", "postgres")
 	c.Database.Password = osGetenv("DB_PASSWORD", "2005")
-	c.Database.Host = osGetenv("DB_HOST", "localhost")
+	c.Database.Host = osGetenv("DB_HOST", "user_postgres")
 	c.Database.Port = osGetenv("DB_PORT", "5432")
 	c.Database.DBname = osGetenv("DB_NAME", "hotel")
 
-	c.User.Host = osGetenv("USER_HOST", "tcp")
+	c.User.Host = osGetenv("USER_HOST", "user_service")
 	c.User.Port = osGetenv("USER_PORT", ":8080")
 
 	return c

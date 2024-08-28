@@ -3,6 +3,7 @@ package handler
 import (
 	broadcast17 "api/internal/broadcast"
 	"api/internal/models"
+	middleware "api/internal/rate_limiting"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 type Handler struct {
 	B *broadcast17.Adjust
+	M *middleware.RateLimiter
 }
 
 // Register handles the user registration process.

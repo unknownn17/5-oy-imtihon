@@ -25,8 +25,8 @@ func Configuration() *Config {
 	c.Database.Port = osGetenv("DB_PORT", "5432")
 	c.Database.DBname = osGetenv("DB_NAME", "hotel")
 
-	c.User.Host = osGetenv("USER_HOST", "tcp")
-	c.User.Port = osGetenv("USER_PORT", ":8084")
+	c.User.Host = osGetenv("USER_HOST", "notification_service")
+	c.User.Port = osGetenv("USER_PORT", ":50051")
 
 	return c
 }

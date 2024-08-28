@@ -20,7 +20,7 @@ func NewRouter() {
 	r.HandleFunc("/ws", a.HandleWebSocket)
 	go Grpc()
 	fmt.Println("server started on port 8083")
-	log.Fatal(http.ListenAndServe(":8083", r))
+	log.Fatal(http.ListenAndServe("notification_service:8083", r))
 }
 
 func Grpc() {

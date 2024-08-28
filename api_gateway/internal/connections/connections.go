@@ -6,20 +6,22 @@ import (
 	"api/internal/clients/booking"
 	hotelservice "api/internal/clients/hotel"
 	userservice "api/internal/clients/user"
+	middleware "api/internal/rate_limiting"
 	redismethod "api/internal/redis/method"
 	"context"
 	"log"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 func NewBroadcast() *broadcast17.Adjust {
 	u := userservice.UserClinet()
-	h:=hotelservice.Hotel()
-	b:=booking.Hotel()
+	h := hotelservice.Hotel()
+	b := booking.Hotel()
 	r := Redis()
 	ctx := context.Background()
-	return &broadcast17.Adjust{U: u, Ctx: ctx, R: r,H: h,B: b}
+	return &broadcast17.Adjust{U: u, Ctx: ctx, R: r, H: h, B: b}
 }
 
 func NewHandler() *handler.Handler {
@@ -29,7 +31,7 @@ func NewHandler() *handler.Handler {
 
 func Redis() *redismethod.Redis {
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "redis:6379",
 		Password: "",
 		DB:       0,
 	})
@@ -39,4 +41,9 @@ func Redis() *redismethod.Redis {
 		log.Fatal(err)
 	}
 	return &redismethod.Redis{R: client, Ctx: ctx}
+}
+
+func NewRateLimiting() *middleware.RateLimiter {
+	a := Redis()
+	return &middleware.RateLimiter{RedisClient: a, RateLimit: 100, Window: time.Minute * 1}
 }

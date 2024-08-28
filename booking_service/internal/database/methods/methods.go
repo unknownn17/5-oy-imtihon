@@ -202,7 +202,7 @@ func (u *Database) GetRoomInfo(ctx context.Context, req *models.GetRoomInfo) (*m
 }
 
 func GetAllWAitingUSers() (*booking.Response, error) {
-	db, err := sql.Open("postgres", "postgres://postgres:2005@localhost/booking?sslmode=disable")
+	db, err := sql.Open("postgres", "postgres://postgres:2005@booking_postgres:5432/booking?sslmode=disable")
 	if err != nil {
 		log.Println(err)
 		return nil, err
