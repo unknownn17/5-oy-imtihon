@@ -9,7 +9,7 @@ import (
 
 func Producer(key string, req []byte) error {
 	client, err := kgo.NewClient(
-		kgo.SeedBrokers("localhost:9092"),
+		kgo.SeedBrokers("broker:29092"),
 		kgo.AllowAutoTopicCreation(),
 	)
 	if err != nil {

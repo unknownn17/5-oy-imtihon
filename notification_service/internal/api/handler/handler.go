@@ -48,7 +48,7 @@ func (u *WebSocket) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Current connections map:", u.Map)
 
 	kafkaReader, err := kgo.NewClient(
-		kgo.SeedBrokers("localhost:9092"),
+		kgo.SeedBrokers("broker:29092"),
 		kgo.ConsumeTopics("notification"),
 		kgo.ConsumerGroup("my_group"),
 	)

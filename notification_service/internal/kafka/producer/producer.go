@@ -13,7 +13,7 @@ import (
 
 func Producer(key, message string) error {
 	topic := "notification"
-	brokerAddress := "localhost:9092"
+	brokerAddress := "broker:29092"
 
 	kafkaClient, err := kgo.NewClient(
 		kgo.SeedBrokers(brokerAddress),

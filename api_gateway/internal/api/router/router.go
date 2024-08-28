@@ -28,7 +28,6 @@ import (
 
 func NewRouter() {
 	c := config.Configuration()
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
 	r := http.NewServeMux()
 	handler := connections.NewHandler()
 	rate := connections.NewRateLimiting()
@@ -72,14 +71,13 @@ func NewRouter() {
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
 	srv := &http.Server{
-		Addr:      fmt.Sprintf("%s:%s", c.User.Host, c.User.Port),
+		Addr:      c.User.Port,
 		Handler:   r,
 		TLSConfig: tlsConfig,
 	}
-	go GracefulShutdown(srv,logger)
 	fmt.Printf("Server started on port %s\n", c.User.Port)
 	err := srv.ListenAndServeTLS("./tls/localhost.pem", "./tls/localhost-key.pem")
-	logger.Error(err.Error())
+	err.Error()
 	os.Exit(1)
 }
 

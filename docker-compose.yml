@@ -2,10 +2,9 @@ version: '3.8'
 
 services:
   api_gateway:
-    build:
-      context: ./api_gateway
-      dockerfile: dockerfile.multistage
-    container_name: api_gateway_container
+    build: ./api_gateway
+    # dockerfile: dockerfile.multistage
+    container_name: api_gateway1
     ports:
       - 8085:8085
     depends_on:
@@ -18,9 +17,8 @@ services:
       - mynetwork
 
   user_service:
-    build:
-      context: ./user_service
-      dockerfile: dockerfile.multistage
+    build: ./user_service
+    # dockerfile: dockerfile.multistage
     container_name: user_service_container
     image: user_service_image
     environment:
@@ -29,13 +27,13 @@ services:
       - 8080:8080
     depends_on:
       - user_postgres
+      - broker
     networks:
       - mynetwork
 
   hotel_service:
-    build:
-      context: ./hotel_service
-      dockerfile: dockerfile.multistage
+    build: ./hotel_service
+    # dockerfile: dockerfile.multistage
     container_name: hotel_service_container
     image: hotel_service_image
     environment:
@@ -48,9 +46,8 @@ services:
       - mynetwork
 
   booking_service:
-    build:
-      context: ./booking_service
-      dockerfile: dockerfile.multistage
+    build: ./booking_service
+    # dockerfile: dockerfile.multistage
     container_name: booking_service_container
     image: booking_service_image
     environment:
@@ -60,14 +57,15 @@ services:
     depends_on:
       - booking_postgres
       - migrate_booking
+      - broker
     networks:
       - mynetwork
 
   notification_service:
+    build: ./notification_service
+    container_name: notification_service_container
     image: notification_service_image
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # dockerfile: dockerfile.multistage
     ports:
       - "8083:8083"
       - "50051:50051"
@@ -80,11 +78,11 @@ services:
     image: apache/kafka:latest
     container_name: kafka_broker
     ports:
-      - "9092:9092"
+      - "9092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -106,12 +104,13 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 2005
+      POSTGRES_DB: hotel
       PGDATA: /var/lib/postgresql/data
     volumes:
       - user-db-data:/var/lib/postgresql/data
       - ./user_service/migrations:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
+      - "5435:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d hotel || exit 1"]
       interval: 30s
@@ -125,7 +124,7 @@ services:
     image: migrate/migrate
     volumes:
       - ./user_service/migrations:/migrations
-    command: ["-path", "/migrations", "-database", "postgres://2005:2005@user_postgres:5432/hotel?sslmode=disable", "up"]
+    command: ["-path", "/migrations", "-database", "postgres://postgres:2005@user_postgres:5432/hotel?sslmode=disable", "up"]
     depends_on:
       user_postgres:
         condition: service_healthy
@@ -138,6 +137,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 2005
+      POSTGRES_DB: hotels
       PGDATA: /var/lib/postgresql/data
     volumes:
       - hotel-db-data:/var/lib/postgresql/data
@@ -157,7 +157,7 @@ services:
     image: migrate/migrate
     volumes:
       - ./hotel_service/migrations:/migrations
-    command: ["-path", "/migrations", "-database", "postgres://2005:2005@hotel_postgres:5432/hotels?sslmode=disable", "up"]
+    command: ["-path", "/migrations", "-database", "postgres://postgres:2005@hotel_postgres:5432/hotels?sslmode=disable", "up"]
     depends_on:
       hotel_postgres:
         condition: service_healthy
@@ -170,6 +170,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 2005
+      POSTGRES_DB: booking
       PGDATA: /var/lib/postgresql/data
     volumes:
       - booking-db-data:/var/lib/postgresql/data
@@ -189,7 +190,7 @@ services:
     image: migrate/migrate
     volumes:
       - ./booking_service/migrations:/migrations
-    command: ["-path", "/migrations", "-database", "postgres://2005:2005@booking_postgres:5432/booking?sslmode=disable", "up"]
+    command: ["-path", "/migrations", "-database", "postgres://postgres:2005@booking_postgres:5432/booking?sslmode=disable", "up"]
     depends_on:
       booking_postgres:
         condition: service_healthy

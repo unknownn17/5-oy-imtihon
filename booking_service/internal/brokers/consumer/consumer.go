@@ -19,7 +19,7 @@ type Consumer17 struct {
 
 func (u *Consumer17) Consumer() {
 	client, err := kgo.NewClient(
-		kgo.SeedBrokers("localhost:9092"),
+		kgo.SeedBrokers("broker:29092"),
 		kgo.ConsumeTopics("booking"),
 	)
 	if err != nil {
